@@ -12,8 +12,8 @@ test = 22
 
 HTML;
 
-$logikit = new Logikit();
+$logica = new Logica();
 
-$logikit->run($string);
+$logica->run($string);
 
-print $logikit->error;
+print $logica->error;
