@@ -1,11 +1,20 @@
 <?php
 
 $string = <<<HTML
+
 test = 22
 
-[if ! (test > 21)]
+[print [cat "this " "is " "a " test]]
 
-	[print test]
+[if (! (test < 20))]
+
+	[print (test + 1)]
+
+[fi]
+
+[if (!! (test == 21))]
+
+	[print "test"]
 	[exit]
 
 [fi]
