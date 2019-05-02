@@ -20,7 +20,7 @@ class Logica {
 
 			'if' => function($stack){
 
-				if(!$this->test($stack)){
+				if(!$this->return($stack[0])){
 
 					while(!$this->terminate && $this->line < $this->length && $this->line < 200){
 
@@ -38,15 +38,25 @@ class Logica {
 
 			},
 
-			'printvar' => function($stack){
+			'fi' => function(){},
 
-				echo $this->getVar($stack);
+			'cat' => function($stack){
+
+				return implode('', $stack);
+
+			},
+
+			'request' => function($stack){
+
+				$request = $stack[0];
+
+				echo 'sending request to interwebz: ' . $request . "\n";
 
 			},
 
 			'print' => function($stack){
 
-				echo implode(' ', $stack);
+				echo implode(' ', $stack) . "\n";
 
 			},
 
@@ -70,9 +80,64 @@ class Logica {
 			'<=' => function ($a, $b) { return $a <= $b; },
 			'%' => function ($a, $b) { return $a % $b; },
 			'!!' => function ($a) { return !!$a; },
-			'!' => function ($a) { return !$a; }
+			'!' => function ($a) { return !$a; },
+			'+' => function ($a, $b) { return $a + $b; }
 
 		];
+
+	}
+
+	private function split($string){
+
+		$inString = false;
+
+		$depth = 0;
+		$split = 0;
+		$length = strlen($string) - 1;
+
+		$array = [];
+
+		foreach(str_split($string) as $i => $char){
+
+			if($char === '"'){
+
+				$inString = !$inString;
+
+			}
+
+			if(!$inString){
+
+				if(in_array($char, ['(', '['])){
+
+					$depth++;
+
+				}else if(in_array($char, [')', ']'])){
+
+					$depth--;
+
+				}
+
+				if((ctype_space($char) || $i == $length) && !$depth){
+
+					// echo "\n  | " . substr($string, $split, $i == $length ? $length + 1 : $i - $split); // for debugging
+
+					$array[] = substr($string, $split, $i == $length ? $length + 1 : $i - $split);
+
+					$split = $i + 1;
+
+				}
+
+			}
+
+		}
+
+		return $array;
+
+	}
+
+	private function part(){
+
+		return trim($this->parts[$this->line]);
 
 	}
 
@@ -80,23 +145,16 @@ class Logica {
 
 		$parts = explode(' ', $this->part(), 3);
 
-		if(ctype_alpha($parts[0]) && !isset($this->function[$parts[0]])){
+		if(ctype_alpha($parts[0]) && !isset($this->function[$parts[0]]) && count($parts) === 3 && $parts[1] == '='){
 
-			if(count($parts) === 3 && $parts[1] == '='){
+			$this->vars[$parts[0]] = $this->return($parts[2]);
 
-				if(strpos($parts[2], ' ') !== false){
-
-					$parts[2] = $this->test($parts[2]);
-
-				}
-
-				$this->vars[$parts[0]] = $parts[2];
-
-				return true;
-
-			}
+			return true;
 
 		}
+
+		$this->error = 'Attempted to set illegal var';
+		$this->terminate = true;
 
 		return false;
 
@@ -126,21 +184,38 @@ class Logica {
 
 	}
 
-	private function part(){
+	private function execute($string){
 
-		return trim($this->parts[$this->line]);
+		$stack = $this->split(substr($string, 1, -1));
 
-	}
-
-	private function test($stack){
+		$function = array_shift($stack);
 
 		foreach($stack as &$param){
 
-			if(substr($param, 0, 1) === '('){
+			$param = $this->return($param);
 
-				$param = $this->test(explode(' ', substr($param, 1, -1)));
+		}
 
-			}
+		if(!isset($this->function[$function])){
+
+			$this->error = 'Function does not exist';
+			$this->terminate = true;
+
+			return false;
+
+		}
+
+		return $this->function[$function]($stack);
+
+	}
+
+	private function test($string){
+
+		$stack = $this->split(substr($string, 1, -1));
+
+		foreach($stack as &$param){
+
+			$param = $this->return($param);
 
 		}
 
@@ -168,47 +243,36 @@ class Logica {
 
 	}
 
-	private function execute($string){
+	private function return($string){
 
-		if(substr($string, -1) !== ']' && substr($string, -1) !== ')'){
+		if(is_array($string)){
 
-			$this->error = 'Function call not ended';
+			$this->error = 'Illegal parameter';
 			$this->terminate = true;
 
 			return false;
 
 		}
 
-		preg_match_all('/\(.*?\)|\[.*?\]|[^ ]+/', substr($string, 1, -1), $stack); // split on all spaces that are not brackets
+		if(substr($string, 0, 1) === '"' || substr($string, -1) === '"'){
 
-		$stack = $stack[0];
+			return substr($string, 1, -1);
 
-		$function = array_shift($stack);
+		}else if(substr($string, 0, 1) === '[' || substr($string, -1) === ']'){
 
-		foreach($stack as &$param){
+			return $this->execute($string);
 
-			if(substr($param, 0, 1) === '['){
+		}else if(substr($string, 0, 1) === '(' || substr($string, -1) === ')'){
 
-				$param = $this->execute($param);
+			return $this->test($string);
 
-			}else if(isset($this->vars[$param])){
+		}else if(isset($this->vars[$string])){
 
-				$param = $this->vars[$param];
-
-			}
+			return $this->vars[$string];
 
 		}
 
-		if(!isset($this->function[$function])){
-
-			$this->error = 'Function does not exist';
-			$this->terminate = true;
-
-			return false;
-
-		}
-
-		return $this->function[$function]($stack);
+		return $string;
 
 	}
 
@@ -222,7 +286,7 @@ class Logica {
 
 		while(!$this->terminate && $this->line < $this->length && $this->line < 200){
 
-			echo "\n" . $this->line . ' | ' . $this->part() . ' | ';
+			// echo "\n { " . $this->line . ' | ' . $this->part() . ' } '; // for debugging
 
 			if($this->part()){
 
