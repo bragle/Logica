@@ -85,7 +85,11 @@ counter = 0
 
 [fi]
 
-[print "counter is higher than " [cat "1" 0]]
+[if (counter)]
+
+	[print "counter is higher than " [cat "1" 0]]
+
+[fi]
 
 [exit]
 
