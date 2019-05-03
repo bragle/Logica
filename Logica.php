@@ -116,9 +116,7 @@ class Logica {
 			'&&' => function ($a, $b) { return $a && $b; },
 
 			'!!' => function ($a) { return !!$a; },
-			'!' => function ($a) { return !$a; },
-			'++' => function ($a) { return $a + 1; },
-			'--' => function ($a) { return $a - 1; }
+			'!' => function ($a) { return !$a; }
 
 		];
 
@@ -175,8 +173,6 @@ class Logica {
 
 				if((ctype_space($char) || $i == $length) && !$delimiterStack){
 
-					// echo "\n   " . $this->line . " | " . substr($string, $split, $i == $length ? $length + 1 : $i - $split); // for debugging
-
 					$array[] = substr($string, $split, $i == $length ? $length + 1 : $i - $split);
 
 					$split = $i + 1;
@@ -192,6 +188,15 @@ class Logica {
 	}
 
 	private function validateCall($function, $paramCount){
+
+		if(!is_callable($function)){
+
+			$this->error = 'Uncallable object passed as function';
+			$this->terminate = true;
+
+			return false;
+
+		}
 
 		if((new ReflectionFunction($function))->getNumberOfRequiredParameters() !== $paramCount){
 
@@ -303,6 +308,15 @@ class Logica {
 
 			case 3:
 
+				if(!isset($this->operator[$stack[1]])){
+
+					$this->error = "Operator ({$stack[1]}) does not exist";
+					$this->terminate = true;
+
+					return false;
+
+				}
+
 				if(!$this->validateCall($this->operator[$stack[1]], 2)){
 
 					return false;
@@ -314,6 +328,15 @@ class Logica {
 				break;
 
 			case 2:
+
+				if(!isset($this->operator[$stack[0]])){
+
+					$this->error = "Operator ({$stack[0]}) does not exist";
+					$this->terminate = true;
+
+					return false;
+
+				}
 
 				if(!$this->validateCall($this->operator[$stack[0]], 1)){
 
@@ -335,7 +358,7 @@ class Logica {
 
 	}
 
-	private function return($string){
+	private function return($string, $base = false){
 
 		if(is_array($string)){
 
@@ -346,17 +369,34 @@ class Logica {
 
 		}
 
-		if(substr($string, 0, 1) === '"' || substr($string, -1) === '"'){
-
-			return substr($string, 1, -1);
-
-		}else if(substr($string, 0, 1) === '[' || substr($string, -1) === ']'){
+		if(substr($string, 0, 1) === '[' && substr($string, -1) === ']'){
 
 			return $this->execute($string);
 
-		}else if(substr($string, 0, 1) === '(' || substr($string, -1) === ')'){
+		}else if(substr($string, 0, 1) === '(' && substr($string, -1) === ')'){
 
 			return $this->test($string);
+
+		}
+
+		if($base){
+
+			if($this->setVar()){
+
+				return true;
+
+			}
+
+			$this->error = 'Unable to set variable';
+			$this->terminate = true;
+
+			return false;
+
+		}
+
+		if(substr($string, 0, 1) === '"' && substr($string, -1) === '"'){
+
+			return substr($string, 1, -1);
 
 		}else if(isset($this->vars[$string])){
 
@@ -376,7 +416,7 @@ class Logica {
 
 		}
 
-		return $this->error . ' @ ' . $this->line;
+		return "{$this->error} @ {$this->line}";
 
 	}
 
@@ -390,20 +430,9 @@ class Logica {
 
 		while(!$this->terminate && $this->line < $this->length){
 
-			// echo "\n { " . $this->line . ' | ' . $this->part() . ' } '; // for debugging
-
 			if($this->part()){
 
-				if(substr($this->part(), 0, 1) === '['){
-
-					$this->execute($this->part());
-
-				}else if(!$this->setVar()){
-
-					$this->error = 'Unable to set variable';
-					$this->terminate = true;
-
-				}
+				$this->return($this->part(), true);
 
 				$this->steps++;
 
