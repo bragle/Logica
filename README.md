@@ -1,9 +1,11 @@
 # Logica
 A tiny programming language for making custom logic flow in PHP applications
 
+*note: spaces are there for a reason. this language is really simple and requires spaces to split calls*
+
 Howto:
 
-Functions are defined within [square brackets].
+Functions are defined within \[square brackets\].
 
 Available functions:
 
@@ -61,6 +63,10 @@ Available operators with one param:
 ```
 
 Operations are defined with (brackets) and either one param or two params.
+
+Variables are always global, and can be overwritten. Variables should be set like this:
+
+*variable name* = *value*
 
 Example:
 
