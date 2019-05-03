@@ -22,7 +22,11 @@ counter = 0
 
 [exit]
 
-[print "this message will never be printed"]
+[if (counter)]
+
+	[print "counter is higher than " [cat "1" 0]]
+
+[fi]
 
 HTML;
 
