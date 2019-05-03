@@ -60,6 +60,8 @@ Available operators with one param:
 --
 ```
 
+Operations are defined with (brackets) and either one param or two params.
+
 Example:
 
 ```
@@ -85,4 +87,12 @@ counter = 0
 
 [print "this message will never be printed"]
 ```
-Operations are defined with (brackets) and either one param or two params.
+
+Example output:
+
+```
+8 is higher than 7
+9 is higher than 7
+10 is higher than 7
+counter is higher than  10
+```
