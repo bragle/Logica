@@ -36,11 +36,11 @@ class Logica {
 
 				if(!$this->return($stack[0])){
 
-					while(!$this->terminate && $this->line < $this->length && $this->line < $this->length - 1){
+					while($this->line < $this->length - 1){
 
 						if($this->part() == '[fi]'){
 
-							break;
+							return true;
 
 						}
 
@@ -49,6 +49,8 @@ class Logica {
 					}
 
 				}
+
+				return false;
 
 			},
 
@@ -93,21 +95,6 @@ class Logica {
 
 				$this->terminate = true;
 
-			},
-
-			'request' => function($stack){
-
-				if(count($stack) !== 1){
-
-					$this->error = 'request function requires one param';
-					$this->terminate = true;
-
-					return false;
-
-				}
-
-				echo 'sending request to interwebz: ' . $stack[0] . "\n";
-
 			}
 
 		];
@@ -124,11 +111,14 @@ class Logica {
 			'<=' => function ($a, $b) { return $a <= $b; },
 			'%' => function ($a, $b) { return $a % $b; },
 			'+' => function ($a, $b) { return $a + $b; },
+			'-' => function ($a, $b) { return $a - $b; },
 			'||' => function ($a, $b) { return $a || $b; },
 			'&&' => function ($a, $b) { return $a && $b; },
 
 			'!!' => function ($a) { return !!$a; },
-			'!' => function ($a) { return !$a; }
+			'!' => function ($a) { return !$a; },
+			'++' => function ($a) { return $a + 1; },
+			'--' => function ($a) { return $a - 1; }
 
 		];
 
@@ -185,7 +175,7 @@ class Logica {
 
 				if((ctype_space($char) || $i == $length) && !$delimiterStack){
 
-					// echo "\n  | " . substr($string, $split, $i == $length ? $length + 1 : $i - $split); // for debugging
+					// echo "\n   " . $this->line . " | " . substr($string, $split, $i == $length ? $length + 1 : $i - $split); // for debugging
 
 					$array[] = substr($string, $split, $i == $length ? $length + 1 : $i - $split);
 
@@ -247,7 +237,7 @@ class Logica {
 
 			return $this->vars[$var];
 
-		}else if(ctype_digit($var)){
+		}else if(is_numeric($var)){
 
 			return (int) $var;
 
@@ -257,6 +247,7 @@ class Logica {
 			
 		}else{
 
+			$this->error = 'Attempted to get undefined var';
 			$this->terminate = true;
 
 			return null;
@@ -397,7 +388,7 @@ class Logica {
 
 		$this->line = 0;
 
-		while(!$this->terminate && $this->line < $this->length && $this->steps < $this->maxSteps){
+		while(!$this->terminate && $this->line < $this->length){
 
 			// echo "\n { " . $this->line . ' | ' . $this->part() . ' } '; // for debugging
 
