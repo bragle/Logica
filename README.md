@@ -73,7 +73,7 @@ counter = 0
 
 [if (counter > (10 - 3))]
 
-	[print [cat counter " is higher than " 7]]
+	[print counter " is higher than " 7]
 
 [fi]
 
