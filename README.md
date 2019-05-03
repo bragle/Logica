@@ -58,8 +58,6 @@ Available operators with one param:
 ```
 !!
 !
-++
---
 ```
 
 Operations are defined with (brackets) and either one param or two params.
