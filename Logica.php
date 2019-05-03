@@ -373,11 +373,7 @@ class Logica {
 
 			return $this->execute($string);
 
-		}else if(substr($string, 0, 1) === '(' && substr($string, -1) === ')'){
-
-			return $this->test($string);
-
-		}
+		} 
 
 		if($base){
 
@@ -394,7 +390,11 @@ class Logica {
 
 		}
 
-		if(substr($string, 0, 1) === '"' && substr($string, -1) === '"'){
+		if(substr($string, 0, 1) === '(' && substr($string, -1) === ')'){
+
+			return $this->test($string);
+
+		}else if(substr($string, 0, 1) === '"' && substr($string, -1) === '"'){
 
 			return substr($string, 1, -1);
 
