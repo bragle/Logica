@@ -12,7 +12,7 @@ counter = 0
 
 [if (counter < 10)]
 
-	counter = (++ counter)
+	counter = (counter + 1)
 
 	[jump 3]
 
