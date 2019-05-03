@@ -5,14 +5,19 @@ class Logica {
 	private $vars = [];
 	private $parts = [];
 
-	public $function = [];
-	public $operator = [];
+	private $function;
+	private $operator;
+	private $delimiterMap;
+	private $delimiterMapReverse;
 
-	public $error = false;
-	public $terminate = false;
+	private $error = false;
+	private $terminate = false;
 
 	private $length = 0;
+	private $steps = 0;
 	private $line = 0;
+
+	private $maxSteps = 200;
 
 	public function __construct(){
 
@@ -22,7 +27,7 @@ class Logica {
 
 				if(!$this->return($stack[0])){
 
-					while(!$this->terminate && $this->line < $this->length && $this->line < 200){
+					while(!$this->terminate && $this->line < $this->length && $this->line < $this->length - 1){
 
 						if($this->part() == '[fi]'){
 
@@ -40,17 +45,23 @@ class Logica {
 
 			'fi' => function(){},
 
-			'cat' => function($stack){
+			'jump' => function($stack){
 
-				return implode('', $stack);
+				if(!ctype_digit($stack[0])){
+
+					return false;
+
+				}
+
+				$this->line = $stack[0] - 1;
+
+				return true;
 
 			},
 
-			'request' => function($stack){
+			'cat' => function($stack){
 
-				$request = $stack[0];
-
-				echo 'sending request to interwebz: ' . $request . "\n";
+				return implode('', $stack);
 
 			},
 
@@ -63,6 +74,14 @@ class Logica {
 			'exit' => function($stack){
 
 				$this->terminate = true;
+
+			},
+
+			'request' => function($stack){
+
+				$request = $stack[0];
+
+				echo 'sending request to interwebz: ' . $request . "\n";
 
 			}
 
@@ -85,15 +104,25 @@ class Logica {
 
 		];
 
+		$this->delimiterMap = [
+
+			'[' => ']',
+			'(' => ')'
+			
+		];
+
+		$this->delimiterMapReverse = array_flip($this->delimiterMap);
+
 	}
 
 	private function split($string){
 
 		$inString = false;
 
-		$depth = 0;
-		$split = 0;
+		$delimiterStack = [];
+
 		$length = strlen($string) - 1;
+		$split = 0;
 
 		$array = [];
 
@@ -107,17 +136,26 @@ class Logica {
 
 			if(!$inString){
 
-				if(in_array($char, ['(', '['])){
+				if(isset($this->delimiterMap[$char])){
 
-					$depth++;
+					$delimiterStack[] = $char;
 
-				}else if(in_array($char, [')', ']'])){
+				}else if(isset($this->delimiterMapReverse[$char])){
 
-					$depth--;
+					if(end($delimiterStack) != $this->delimiterMapReverse[$char]){
+
+						$this->error = 'Function or operation not closed properly';
+						$this->terminate = true;
+
+						return false;
+
+					}
+
+					array_pop($delimiterStack);
 
 				}
 
-				if((ctype_space($char) || $i == $length) && !$depth){
+				if((ctype_space($char) || $i == $length) && !$delimiterStack){
 
 					// echo "\n  | " . substr($string, $split, $i == $length ? $length + 1 : $i - $split); // for debugging
 
@@ -186,15 +224,13 @@ class Logica {
 
 	private function execute($string){
 
-		$stack = $this->split(substr($string, 1, -1));
+		if(!$stack = $this->split(substr($string, 1, -1))){
 
-		$function = array_shift($stack);
-
-		foreach($stack as &$param){
-
-			$param = $this->return($param);
+			return false;
 
 		}
+
+		$function = array_shift($stack);
 
 		if(!isset($this->function[$function])){
 
@@ -205,13 +241,23 @@ class Logica {
 
 		}
 
+		foreach($stack as &$param){
+
+			$param = $this->return($param);
+
+		}
+
 		return $this->function[$function]($stack);
 
 	}
 
 	private function test($string){
 
-		$stack = $this->split(substr($string, 1, -1));
+		if(!$stack = $this->split(substr($string, 1, -1))){
+
+			return false;
+
+		}
 
 		foreach($stack as &$param){
 
@@ -276,6 +322,18 @@ class Logica {
 
 	}
 
+	public function error(){
+
+		if(!$this->error){
+
+			return false;
+
+		}
+
+		return $this->error . ' @ ' . $this->line;
+
+	}
+
 	public function run($string){
 
 		$this->parts = explode("\n", $string);
@@ -284,7 +342,7 @@ class Logica {
 
 		$this->line = 0;
 
-		while(!$this->terminate && $this->line < $this->length && $this->line < 200){
+		while(!$this->terminate && $this->line < $this->length && $this->steps < $this->maxSteps){
 
 			// echo "\n { " . $this->line . ' | ' . $this->part() . ' } '; // for debugging
 
@@ -297,6 +355,15 @@ class Logica {
 				}else if(!$this->setVar()){
 
 					$this->error = 'Unable to set variable';
+					$this->terminate = true;
+
+				}
+
+				$this->steps++;
+
+				if($this->steps > $this->maxSteps){
+
+					$this->error = 'Step limit of ' . $this->maxSteps . ' preceded';
 					$this->terminate = true;
 
 				}
