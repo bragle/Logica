@@ -25,6 +25,15 @@ class Logica {
 
 			'if' => function($stack){
 
+				if(count($stack) !== 1){
+
+					$this->error = 'if function requires one param';
+					$this->terminate = true;
+
+					return false;
+
+				}
+
 				if(!$this->return($stack[0])){
 
 					while(!$this->terminate && $this->line < $this->length && $this->line < $this->length - 1){
@@ -46,6 +55,15 @@ class Logica {
 			'fi' => function(){},
 
 			'jump' => function($stack){
+
+				if(count($stack) !== 1){
+
+					$this->error = 'jump function requires one param';
+					$this->terminate = true;
+
+					return false;
+
+				}
 
 				if(!ctype_digit($stack[0])){
 
@@ -79,9 +97,16 @@ class Logica {
 
 			'request' => function($stack){
 
-				$request = $stack[0];
+				if(count($stack) !== 1){
 
-				echo 'sending request to interwebz: ' . $request . "\n";
+					$this->error = 'request function requires one param';
+					$this->terminate = true;
+
+					return false;
+
+				}
+
+				echo 'sending request to interwebz: ' . $stack[0] . "\n";
 
 			}
 
@@ -98,9 +123,12 @@ class Logica {
 			'<' => function ($a, $b) { return $a < $b; },
 			'<=' => function ($a, $b) { return $a <= $b; },
 			'%' => function ($a, $b) { return $a % $b; },
+			'+' => function ($a, $b) { return $a + $b; },
+			'||' => function ($a, $b) { return $a || $b; },
+			'&&' => function ($a, $b) { return $a && $b; },
+
 			'!!' => function ($a) { return !!$a; },
-			'!' => function ($a) { return !$a; },
-			'+' => function ($a, $b) { return $a + $b; }
+			'!' => function ($a) { return !$a; }
 
 		];
 
@@ -170,6 +198,21 @@ class Logica {
 		}
 
 		return $array;
+
+	}
+
+	private function validateCall($function, $paramCount){
+
+		if((new ReflectionFunction($function))->getNumberOfRequiredParameters() !== $paramCount){
+
+			$this->error = 'Function or operation call has invalid parameter count';
+			$this->terminate = true;
+
+			return false;
+
+		}
+
+		return true;
 
 	}
 
@@ -269,11 +312,23 @@ class Logica {
 
 			case 3:
 
+				if(!$this->validateCall($this->operator[$stack[1]], 2)){
+
+					return false;
+
+				}
+
 				return $this->operator[$stack[1]]($this->getVar($stack[0]), $this->getVar($stack[2]));
 
 				break;
 
 			case 2:
+
+				if(!$this->validateCall($this->operator[$stack[0]], 1)){
+
+					return false;
+
+				}
 
 				return $this->operator[$stack[0]]($this->getVar($stack[1]));
 
