@@ -2,22 +2,27 @@
 
 $string = <<<HTML
 
-test = 22
+counter = 0
 
-[print [cat "this " "is " "a " test]]
+[if (counter > (10 - 3))]
 
-[if (! (test < 20))]
-
-	[print (test + 1)]
+	[print [cat counter " is higher than " 7]]
 
 [fi]
 
-[if (!! (test == 21))]
+[if (counter < 10)]
 
-	[print "test"]
-	[exit]
+	counter = (++ counter)
+
+	[jump 3]
 
 [fi]
+
+[print "counter is higher than " [cat "1" 0]]
+
+[exit]
+
+[print "this message will never be printed"]
 
 HTML;
 
@@ -25,4 +30,4 @@ $logica = new Logica();
 
 $logica->run($string);
 
-print $logica->error;
+print $logica->error();
