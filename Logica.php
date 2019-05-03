@@ -11,7 +11,6 @@ class Logica {
 	private $delimiterMapReverse;
 
 	private $error = false;
-	private $terminate = false;
 
 	private $length = 0;
 	private $steps = 0;
@@ -28,7 +27,6 @@ class Logica {
 				if(count($stack) !== 1){
 
 					$this->error = 'if function requires one param';
-					$this->terminate = true;
 
 					return false;
 
@@ -61,7 +59,6 @@ class Logica {
 				if(count($stack) !== 1){
 
 					$this->error = 'jump function requires one param';
-					$this->terminate = true;
 
 					return false;
 
@@ -93,7 +90,7 @@ class Logica {
 
 			'exit' => function($stack){
 
-				$this->terminate = true;
+				$this->line = $this->length;
 
 			}
 
@@ -161,7 +158,6 @@ class Logica {
 					if(end($delimiterStack) != $this->delimiterMapReverse[$char]){
 
 						$this->error = 'Function or operation not closed properly';
-						$this->terminate = true;
 
 						return false;
 
@@ -192,7 +188,6 @@ class Logica {
 		if(!is_callable($function)){
 
 			$this->error = 'Uncallable object passed as function';
-			$this->terminate = true;
 
 			return false;
 
@@ -201,7 +196,6 @@ class Logica {
 		if((new ReflectionFunction($function))->getNumberOfRequiredParameters() !== $paramCount){
 
 			$this->error = 'Function or operation call has invalid parameter count';
-			$this->terminate = true;
 
 			return false;
 
@@ -230,7 +224,6 @@ class Logica {
 		}
 
 		$this->error = 'Attempted to set illegal var';
-		$this->terminate = true;
 
 		return false;
 
@@ -253,7 +246,6 @@ class Logica {
 		}else{
 
 			$this->error = 'Attempted to get undefined var';
-			$this->terminate = true;
 
 			return null;
 
@@ -274,7 +266,6 @@ class Logica {
 		if(!isset($this->function[$function])){
 
 			$this->error = 'Function does not exist';
-			$this->terminate = true;
 
 			return false;
 
@@ -311,7 +302,6 @@ class Logica {
 				if(!isset($this->operator[$stack[1]])){
 
 					$this->error = "Operator ({$stack[1]}) does not exist";
-					$this->terminate = true;
 
 					return false;
 
@@ -332,7 +322,6 @@ class Logica {
 				if(!isset($this->operator[$stack[0]])){
 
 					$this->error = "Operator ({$stack[0]}) does not exist";
-					$this->terminate = true;
 
 					return false;
 
@@ -363,7 +352,6 @@ class Logica {
 		if(is_array($string)){
 
 			$this->error = 'Illegal parameter';
-			$this->terminate = true;
 
 			return false;
 
@@ -384,7 +372,6 @@ class Logica {
 			}
 
 			$this->error = 'Unable to set variable';
-			$this->terminate = true;
 
 			return false;
 
@@ -428,7 +415,7 @@ class Logica {
 
 		$this->line = 0;
 
-		while(!$this->terminate && $this->line < $this->length){
+		while(!$this->error && $this->line < $this->length){
 
 			if($this->part()){
 
@@ -438,8 +425,7 @@ class Logica {
 
 				if($this->steps > $this->maxSteps){
 
-					$this->error = 'Step limit of ' . $this->maxSteps . ' preceded';
-					$this->terminate = true;
+					$this->error = "Step limit of {$this->maxSteps} preceded";
 
 				}
 
