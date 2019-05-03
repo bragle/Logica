@@ -1,6 +1,6 @@
 <?php
 
-$string = <<<HTML
+$string = <<<LOGICA
 counter = 0
 
 [if (counter > (10 - 3))]
@@ -26,7 +26,7 @@ counter = 0
 	[print "counter is higher than " [cat "1" 0]]
 
 [fi]
-HTML;
+LOGICA;
 
 $logica = new Logica();
 
