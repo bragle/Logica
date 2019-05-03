@@ -75,15 +75,15 @@ counter = 0
 
 [if (counter > (10 - 3))]
 
-    [print [cat counter " is higher than " 7]]
+	[print [cat counter " is higher than " 7]]
 
 [fi]
 
 [if (counter < 10)]
 
-    counter = (++ counter)
+	counter = (counter + 1)
 
-    [jump 2]
+	[jump 3]
 
 [fi]
 
