@@ -1,12 +1,11 @@
 <?php
 
 $string = <<<HTML
-
 counter = 0
 
 [if (counter > (10 - 3))]
 
-	[print [cat counter " is higher than " 7]]
+	[print counter " is higher than " 7]
 
 [fi]
 
@@ -14,7 +13,7 @@ counter = 0
 
 	counter = (counter + 1)
 
-	[jump 3]
+	[jump 2]
 
 [fi]
 
@@ -27,7 +26,6 @@ counter = 0
 	[print "counter is higher than " [cat "1" 0]]
 
 [fi]
-
 HTML;
 
 $logica = new Logica();
