@@ -62,7 +62,6 @@ Available operators with one param:
 Example:
 
 ```
-
 counter = 0
 
 [if (counter > (10 - 3))]
@@ -84,6 +83,5 @@ counter = 0
 [exit]
 
 [print "this message will never be printed"]
-
 ```
 Operations are defined with (brackets) and either one param or two params.
