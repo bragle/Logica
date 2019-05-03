@@ -17,6 +17,7 @@ must be ended with [fi]
 **jump**:
 ```
 jumps to a line specified by param 1
+**note: lines start at 0**
 ```
 
 **cat**:
@@ -74,7 +75,7 @@ counter = 0
 
     counter = (++ counter)
 
-    [jump 3]
+    [jump 2]
 
 [fi]
 
