@@ -13,7 +13,7 @@ counter = 0
 
 	counter = (counter + 1)
 
-	[jump 2]
+	[jump 3]
 
 [fi]
 
