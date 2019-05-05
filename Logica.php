@@ -5,6 +5,8 @@ class Logica {
 	private $vars = [];
 	private $parts = [];
 
+	private $output = '';
+
 	private $function;
 	private $operator;
 	private $delimiterMap;
@@ -84,7 +86,7 @@ class Logica {
 
 			'print' => function($stack){
 
-				echo implode(' ', $stack) . "\n";
+				$this->output .= implode('', $stack) . "\n";
 
 			},
 
@@ -404,6 +406,12 @@ class Logica {
 		}
 
 		return "{$this->error} @ {$this->line}";
+
+	}
+
+	public function output(){
+
+		return $this->output;
 
 	}
 
