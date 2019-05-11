@@ -3,6 +3,8 @@
 class Logica {
 
 	private $vars = [];
+	private $staticVars = [];
+
 	private $parts = [];
 
 	private $output = '';
@@ -94,6 +96,44 @@ class Logica {
 
 				$this->line = $this->length;
 
+			},
+
+			'get' => function($stack){
+
+				if(count($stack) !== 1){
+
+					$this->error = 'get function requires one param';
+
+					return false;
+
+				}
+
+				$variable = $this->staticVars;
+
+				foreach(explode('.', $stack[0]) as $part){
+
+					if(!isset($variable[$part])){
+
+						$this->error = 'static variable ' . $part . ' does not exist';
+
+						return false;
+
+					}
+
+					$variable = &$variable[$part];
+
+				}
+
+				if(is_array($variable)){
+
+					$this->error = 'variable is an array, which is not currently supported';
+
+					return false;
+
+				}
+
+				return $variable;
+
 			}
 
 		];
@@ -130,7 +170,7 @@ class Logica {
 
 	}
 
-	private function split($string){
+	private function split(string $string){
 
 		$inString = false;
 
@@ -185,7 +225,7 @@ class Logica {
 
 	}
 
-	private function validateCall($function, $paramCount){
+	private function validateCall($function, int $paramCount){
 
 		if(!is_callable($function)){
 
@@ -231,7 +271,7 @@ class Logica {
 
 	}
 
-	private function getVar($var){
+	private function getVar(string $var){
 
 		if(isset($this->vars[$var])){
 
@@ -255,7 +295,7 @@ class Logica {
 
 	}
 
-	private function execute($string){
+	private function execute(string $string){
 
 		if(!$stack = $this->split(substr($string, 1, -1))){
 
@@ -283,7 +323,7 @@ class Logica {
 
 	}
 
-	private function test($string){
+	private function test(string $string){
 
 		if(!$stack = $this->split(substr($string, 1, -1))){
 
@@ -349,7 +389,7 @@ class Logica {
 
 	}
 
-	private function return($string, $base = false){
+	private function return($string, bool $base = false){
 
 		if(is_array($string)){
 
@@ -397,6 +437,20 @@ class Logica {
 
 	}
 
+	public function addStatics($array){
+
+		if(!is_array($array)){
+
+			$this->error = 'Unable to import static variables';
+
+			return false;
+
+		}
+
+		$this->staticVars = $array;
+
+	}
+
 	public function error(){
 
 		if(!$this->error){
@@ -405,7 +459,7 @@ class Logica {
 
 		}
 
-		return "{$this->error} @ {$this->line}";
+		return "{$this->error} @ " . ($this->line - 1);
 
 	}
 
@@ -415,7 +469,7 @@ class Logica {
 
 	}
 
-	public function run($string){
+	public function run(string $string){
 
 		$this->parts = explode("\n", $string);
 
