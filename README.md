@@ -37,6 +37,11 @@ will concatenate all parameters and print the result
 will exit
 ```
 
+**get**:
+```
+get static variable from a predefined array set with addStatic
+```
+
 Available operators with two params:
 ```
 ==
